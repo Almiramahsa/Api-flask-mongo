@@ -44,5 +44,23 @@ def login():
     return jsonify({'token': access_token}), 200
 
 
+@app.route("/api/todo", methods=['POST'])
+def add_todo_item():
+    try:
+        data = request.form.to_dict()
+        data_token = jwt.decode(data['token'], secret_key, algorithms=[
+                                'HS256'], verify=True)
+        user_id = data_token['_id']
+        todo_id = mongo.db['todos'].insert_one(
+            {'title': data['title'], 'completed': '0', 'user_id': user_id})
+        return jsonify({'message': 'Todo item added successfully', 'id': str(todo_id.inserted_id)})
+    except jwt.ExpiredSignatureError:
+        # Token kadaluarsa
+        return jsonify({'message': 'Expired Token'})
+    except jwt.InvalidTokenError:
+        # Token tidak valid
+        return jsonify({'message': 'Invalid Token'})
+
+
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
