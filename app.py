@@ -3,9 +3,12 @@ from flask_pymongo import PyMongo
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import timedelta, datetime
 import jwt
+import os
+from dotenv import load_dotenv
+
 
 app = Flask(__name__)
-secret_key = 'qwertyasd'
+secret_key = os.getenv('SECRET_KEY')
 
 app.config['MONGO_URI'] = 'mongodb://localhost:27017/todo'
 
@@ -37,9 +40,8 @@ def login():
     payload = {'_id': str(user['_id']),
                'exp': datetime.utcnow() + timedelta(minutes=30)}
     access_token = jwt.encode(
-        payload, secret_key, algorithm='HS256').decode('utf-8')
-
-    return jsonify({'token': token}), 200
+        payload, secret_key, algorithm='HS256')
+    return jsonify({'token': access_token}), 200
 
 
 if __name__ == '__main__':
