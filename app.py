@@ -43,6 +43,8 @@ def login():
         payload, secret_key, algorithm='HS256')
     return jsonify({'token': access_token}), 200
 
+# POST_TODO
+
 
 @app.route("/api/todo", methods=['POST'])
 def add_todo_item():
@@ -60,6 +62,33 @@ def add_todo_item():
     except jwt.InvalidTokenError:
         # Token tidak valid
         return jsonify({'message': 'Invalid Token'})
+
+# GET ALL_TODO DATA
+
+
+@app.route('/api/todo/getall', methods=['POST'])
+def get_todo_list():
+    try:
+        data = request.form.to_dict()
+        data_token = jwt.decode(data['token'], secret_key, algorithms=[
+                                'HS256'], verify=True)
+        user_id = data_token['_id']
+        todos = mongo.db['todos'].find({'user_id': user_id})
+        result = []
+        for todo in todos:
+            result.append({
+                'id': str(todo['_id']),
+                'title': todo['title'],
+                'completed': todo['completed']
+            })
+
+        return jsonify({'message': 'ok', 'data': result})
+    except jwt.ExpiredSignatureError:
+        # Token telah kedaluwarsa
+        return jsonify({'message': 'Expired token!'})
+    except jwt.InvalidTokenError:
+        # Token tidak valid
+        return jsonify({'message': 'Invalid token!'})
 
 
 if __name__ == '__main__':
